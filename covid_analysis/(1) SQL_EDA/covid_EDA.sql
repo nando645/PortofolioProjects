@@ -2,59 +2,56 @@ select TOP 10 *
 from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
 where cd.continent is not null;
 
--- Country with highest covid cases
+-- Covid total_infected and total_death_counts per country
 select  
 	cd.location, 
-    max(cast(cd.population as float)) as total_populations, 
-    max(cast(cd.total_cases as float)) as cases
+    max(cast(cd.population as float)) as total_populations,
+	case
+		when max(cast(cd.total_cases as float)) is null then 0
+		else max(cast(cd.total_cases as float))
+	end as total_infected,
+	case
+		when max(cast(cd.total_deaths as float)) is null then 0
+		else max(cast(cd.total_deaths as float)) 
+	end as total_death_counts
 from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
-where cd.total_cases is not null and total_deaths is not null and cd.continent is not null
+where cd.continent is not null
 group by cd.location
-order by cases DESC;
+order by cd.location ASC;
 
--- Country with highest covid deaths
+-- Country with highest infection rate per population (total_infected to total_populations ratio)
 select  
 	cd.location, 
     max(cast(cd.population as float)) as total_populations, 
-    max(cast(cd.total_deaths as float)) as deaths
-from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
-where cd.total_cases is not null and total_deaths is not null and cd.continent is not null
-group by cd.location
-order by deaths DESC;
-
--- Country with highest infection rate per population (case to population ratio)
-select  
-	cd.location, 
-    max(cast(cd.population as float)) as total_populations, 
-    max(cast(cd.total_cases as float)) as cases,
+    max(cast(cd.total_cases as float)) as total_infected,
 	ROUND(max(cast(cd.total_cases as float)) / max(cast(cd.population as float)) * 100, 3) as infection_rate
 from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
-where cd.total_cases is not null and total_deaths is not null and cd.continent is not null
+where cd.continent is not null
 group by cd.location
 order by infection_rate DESC;
 
--- Country with highest deaths per population (death to population ratio) 
+-- Country with highest deaths per population (total_death_counts to total_populations ratio) 
 select  
 	cd.location, 
     max(cast(cd.population as float)) as total_populations, 
-    max(cast(cd.total_deaths as float)) as deaths,
+    max(cast(cd.total_deaths as float)) as total_death_counts,
     ROUND(max(cast(cd.total_deaths as float)) / max(cast(cd.population as float)) * 100, 3) as death_rate
 from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
-where cd.total_cases is not null and total_deaths is not null and cd.continent is not null
+where cd.continent is not null
 group by cd.location
 order by death_rate DESC;
 
--- Country with highest fatality rate (death to cases ratio) 
+-- Country with highest fatality rate (total_death_counts to total_infected ratio) 
 select  
 	cd.location, 
     max(cast(cd.population as float)) as total_populations, 
-    max(cast(cd.total_cases as float)) as cases,
+    max(cast(cd.total_cases as float)) as total_infected,
+	max(cast(cd.total_deaths as float)) as total_death_counts,
 	ROUND(max(cast(cd.total_cases as float)) / max(cast(cd.population as float)) * 100, 3) as infection_rate,
-    max(cast(cd.total_deaths as float)) as deaths,
     ROUND(max(cast(cd.total_deaths as float)) / max(cast(cd.population as float)) * 100, 3) as death_rate,
-    CONCAT(ROUND(MAX(cast(cd.total_deaths as float)) / MAX(cast(cd.total_cases as float)) * 100, 3), '%') as fatality_rate
+    ROUND(MAX(cast(cd.total_deaths as float)) / MAX(cast(cd.total_cases as float)) * 100, 3) as fatality_rate
 from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
-where cd.total_cases is not null and total_deaths is not null and cd.continent is not null
+where cd.continent is not null
 group by cd.location
 order by fatality_rate DESC;
 
@@ -62,7 +59,7 @@ order by fatality_rate DESC;
 select
 	cd.continent, 
     max(cast(cd.population as float)) as total_populations, 
-    max(cast(cd.total_cases as float)) as cases,
+    max(cast(cd.total_cases as float)) as total_infected,
 	ROUND(max(cast(cd.total_cases as float)) / max(cast(cd.population as float)) * 100, 3) as infection_rate,
     max(cast(cd.total_deaths as float)) as deaths,
     ROUND(max(cast(cd.total_deaths as float)) / max(cast(cd.population as float)) * 100, 3) as death_rate,
@@ -71,7 +68,7 @@ from [[Portofolio]]-CovidDeaths]..covid_deaths$ as cd
 where cd.continent is not null
 group by cd.continent
 
--- Daily global cases & deaths since beginning
+-- Daily global total_infected & deaths since beginning
 select
 	cd.date,
 	sum(cast(cd.new_cases as float)) as daily_total_cases,
@@ -85,7 +82,7 @@ where cd.location='World' and cd.new_cases is not null
 group by cd.date
 order by 1,2
 
--- Global cases and deaths
+-- Global total_infected and deaths
 select
 	--cd.date,
 	sum(cast(cd.new_cases as float)) as total_cases,
