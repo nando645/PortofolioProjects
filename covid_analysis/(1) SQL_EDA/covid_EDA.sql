@@ -77,7 +77,7 @@ order by cd.location, cd.date asc
 
 -- Global total_infected and deaths
 select
-	cast(cd.population as float),
+	cast(cd.population as float) as total_populations,
 	sum(cast(cd.new_cases as float)) as total_infected,
 	sum(cast(cd.new_deaths as float)) as total_death_counts,
 	ROUND(SUM(CAST(cd.new_deaths AS FLOAT)) / SUM(CAST(cd.new_cases AS FLOAT)) * 100, 2) as fatality_rate
